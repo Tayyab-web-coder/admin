@@ -4,38 +4,27 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Panel</title>
-  <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.1.0/firebase-storage.js"></script>
-  <script src="./firebaseConfig.js" type="module"></script>
-  <script src="./storage.js" type="module"></script>
-  <style>
-    video {
-      width: 100px;
-    }
-  </style>
-</head>
-<body>
-  <h1>Welcome, Admin!</h1>
-  <button onclick="logout()">Log Out</button>
-
-  <h1>Upload and Manage Files</h1>
-  <form id="upload-form">
-    <label for="file">Choose file:</label>
-    <input type="file" id="file" name="file" required>
-    <label for="file-description">Description:</label>
-    <input type="text" id="file-description" name="file-description" required>
-    <button type="submit">Upload</button>
-  </form>
-
-  <h2>File List</h2>
-  <ul id="file-list"></ul>
-
   <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js';
+    import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js';
+    import { getStorage } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-storage.js';
+    import { getAuth, signOut } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js';
     import { uploadFile, updateFileMetadata, deleteFile } from './storage.js';
-    import { collection, getDocs } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js';
-    import { db } from './firebaseConfig.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBTahYHkNIvOlv2PwAAd1o4Q-e8xACFhcI",
+      authDomain: "panel-481bd.firebaseapp.com",
+      projectId: "panel-481bd",
+      storageBucket: "panel-481bd.appspot.com",
+      messagingSenderId: "529328619298",
+      appId: "1:529328619298:web:248714d17f4d19b489af7b"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const storage = getStorage(app);
+    const auth = getAuth(app);
 
     document.getElementById('upload-form').addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -46,7 +35,7 @@
 
       if (file) {
         try {
-          const fileId = await uploadFile(file, { description });
+          const fileId = await uploadFile(file, { description }, db, storage);
           console.log('File uploaded with ID:', fileId);
           fileInput.value = '';
           descriptionInput.value = '';
@@ -80,7 +69,7 @@
       const newDescription = prompt('Enter new description:');
       if (newDescription) {
         try {
-          await updateFileMetadata(fileId, { description: newDescription });
+          await updateFileMetadata(fileId, { description: newDescription }, db);
           console.log('Metadata updated');
           displayFiles();
         } catch (error) {
@@ -92,7 +81,7 @@
     window.removeFile = async (fileId, fileName) => {
       if (confirm('Are you sure you want to delete this file?')) {
         try {
-          await deleteFile(fileId, fileName);
+          await deleteFile(fileId, fileName, db, storage);
           console.log('File deleted');
           displayFiles();
         } catch (error) {
@@ -101,15 +90,31 @@
       }
     };
 
-    displayFiles();
-    
     const logout = () => {
-      firebase.auth().signOut().then(() => {
+      signOut(auth).then(() => {
         window.location.href = 'index.html';
       }).catch((error) => {
         console.error('Sign out error:', error);
       });
     }
+
+    displayFiles();
   </script>
+</head>
+<body>
+  <h1>Welcome, Admin!</h1>
+  <button onclick="logout()">Log Out</button>
+
+  <h1>Upload and Manage Files</h1>
+  <form id="upload-form">
+    <label for="file">Choose file:</label>
+    <input type="file" id="file" name="file" required>
+    <label for="file-description">Description:</label>
+    <input type="text" id="file-description" name="file-description" required>
+    <button type="submit">Upload</button>
+  </form>
+
+  <h2>File List</h2>
+  <ul id="file-list"></ul>
 </body>
 </html>

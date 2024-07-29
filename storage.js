@@ -1,9 +1,8 @@
-import { storage, db } from './firebaseconfig.js';
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-storage.js';
 import { collection, addDoc, updateDoc, doc, getDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js';
 
 // Upload file
-export const uploadFile = (file, metadata) => {
+export const uploadFile = async (file, metadata, db, storage) => {
   const fileRef = ref(storage, `files/${file.name}`);
   const uploadTask = uploadBytesResumable(fileRef, file);
 
@@ -34,20 +33,14 @@ export const uploadFile = (file, metadata) => {
   });
 };
 
-// Read file metadata
-export const getFileMetadata = async (fileId) => {
-  const fileDoc = await getDoc(doc(db, 'files', fileId));
-  return fileDoc.exists() ? fileDoc.data() : null;
-};
-
 // Update file metadata
-export const updateFileMetadata = async (fileId, metadata) => {
+export const updateFileMetadata = async (fileId, metadata, db) => {
   const fileDoc = doc(db, 'files', fileId);
   await updateDoc(fileDoc, metadata);
 };
 
 // Delete file
-export const deleteFile = async (fileId, fileName) => {
+export const deleteFile = async (fileId, fileName, db, storage) => {
   await deleteDoc(doc(db, 'files', fileId));
   const fileRef = ref(storage, `files/${fileName}`);
   await deleteObject(fileRef);
