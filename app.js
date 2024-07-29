@@ -7,9 +7,12 @@ document.addEventListener('DOMContentLoaded', () => {
     messagingSenderId: "529328619298",
     appId: "1:529328619298:web:248714d17f4d19b489af7b"
   };
+    // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
+
+  console.log('Firebase initialized');
 
   const signupForm = document.getElementById('signup-form');
   const loginForm = document.getElementById('login-form');
@@ -21,28 +24,17 @@ document.addEventListener('DOMContentLoaded', () => {
       const password = signupForm['signup-password'].value;
 
       try {
-        const querySnapshot = await db.collection('users').where('email', '==', email).get();
-        if (!querySnapshot.empty) {
-          const userDoc = querySnapshot.docs[0];
-          const role = userDoc.data().role;
-          if (role === 'admin') {
-            alert('You are being redirected to the admin page.');
-            window.location.href = 'admin.html';
-          } else {
-            alert('You are being redirected to the user page.');
-            window.location.href = 'user.html';
-          }
-        } else {
-          const cred = await auth.createUserWithEmailAndPassword(email, password);
-          await db.collection('users').doc(cred.user.uid).set({
-            email: email,
-            role: 'user'
-          });
-          signupForm.reset();
-          alert('Signup successful. Please log in.');
-        }
+        const cred = await auth.createUserWithEmailAndPassword(email, password);
+        console.log('User created:', cred.user.uid);
+        await db.collection('users').doc(cred.user.uid).set({
+          email: email,
+          role: 'user'
+        });
+        console.log('User document created');
+        signupForm.reset();
+        alert('Signup successful. Please log in.');
       } catch (err) {
-        console.error(err);
+        console.error('Error during signup:', err);
         alert('Error during signup: ' + err.message);
       }
     });
@@ -56,9 +48,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         const cred = await auth.signInWithEmailAndPassword(email, password);
+        console.log('User signed in:', cred.user.uid);
         const doc = await db.collection('users').doc(cred.user.uid).get();
         if (doc.exists) {
           const role = doc.data().role;
+          console.log('User role:', role);
           if (role === 'admin') {
             window.location.href = 'admin.html';
           } else {
@@ -69,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
           alert('No such user!');
         }
       } catch (err) {
-        console.error(err);
+        console.error('Error during login:', err);
         alert('Error during login: ' + err.message);
       }
     });
