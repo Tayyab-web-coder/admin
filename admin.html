@@ -9,6 +9,7 @@
     import { getFirestore } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js';
     import { getStorage } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-storage.js';
     import { getAuth, signOut } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js';
+    import { getDocs, collection } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js';
     import { uploadFile, updateFileMetadata, deleteFile } from './storage.js';
 
     const firebaseConfig = {
@@ -116,5 +117,6 @@
 
   <h2>File List</h2>
   <ul id="file-list"></ul>
+  <script type="module" src="firebaseconfig.js"></script>
 </body>
 </html>
