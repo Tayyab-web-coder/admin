@@ -7,7 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
     messagingSenderId: "529328619298",
     appId: "1:529328619298:web:248714d17f4d19b489af7b"
   };
-    // Initialize Firebase
+
+  // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
@@ -22,15 +23,19 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const email = signupForm['signup-email'].value;
       const password = signupForm['signup-password'].value;
-
+  
       try {
         const cred = await auth.createUserWithEmailAndPassword(email, password);
         console.log('User created:', cred.user.uid);
+  
+        // Assign role based on email
+        const role = email === 'muhammadnadeem34949@gmail.com' ? 'admin' : 'user';
+  
         await db.collection('users').doc(cred.user.uid).set({
           email: email,
-          role: 'user'
+          role: role
         });
-        console.log('User document created');
+        console.log('User document created with role:', role);
         signupForm.reset();
         alert('Signup successful. Please log in.');
       } catch (err) {
@@ -39,7 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-
+  
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -49,18 +54,20 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         const cred = await auth.signInWithEmailAndPassword(email, password);
         console.log('User signed in:', cred.user.uid);
-        const doc = await db.collection('users').doc(cred.user.uid).get();
-        if (doc.exists) {
-          const role = doc.data().role;
+
+        const userDoc = await db.collection('users').doc(cred.user.uid).get();
+        if (userDoc.exists) {
+          const role = userDoc.data().role;
           console.log('User role:', role);
+
           if (role === 'admin') {
             window.location.href = 'admin.html';
           } else {
             window.location.href = 'user.html';
           }
         } else {
-          console.error('No such user!');
-          alert('No such user!');
+          console.error('No such user document!');
+          alert('No such user document!');
         }
       } catch (err) {
         console.error('Error during login:', err);
@@ -68,4 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
+
 });
