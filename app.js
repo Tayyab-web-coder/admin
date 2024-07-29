@@ -7,8 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     messagingSenderId: "529328619298",
     appId: "1:529328619298:web:248714d17f4d19b489af7b"
   };
-
-  // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
