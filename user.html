@@ -32,6 +32,11 @@
         console.error('Sign out error:', error);
       });
     }
+    
+    const clearInputs = () => {
+      const inputs = document.querySelectorAll('input[type="text"], input[type="password"], input[type="email"]');
+      inputs.forEach(input => input.value = '');
+    };
   </script>
 </body>
 </html>

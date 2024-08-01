@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+
   const firebaseConfig = {
     apiKey: "AIzaSyBTahYHkNIvOlv2PwAAd1o4Q-e8xACFhcI",
     authDomain: "panel-481bd.firebaseapp.com",
@@ -7,35 +8,49 @@ document.addEventListener('DOMContentLoaded', () => {
     messagingSenderId: "529328619298",
     appId: "1:529328619298:web:248714d17f4d19b489af7b"
   };
-
   // Initialize Firebase
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
 
-  console.log('Firebase initialized');
-
   const signupForm = document.getElementById('signup-form');
   const loginForm = document.getElementById('login-form');
+
+  // Check if the user is already logged in
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      try {
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+          const role = userDoc.data().role;
+          if (role === 'admin') {
+            window.location.href = 'admin.html';
+          } else {
+            window.location.href = 'user.html';
+          }
+        } else {
+          console.error('No such user document!');
+          window.location.href = 'index.html'; // Redirect to home if no user document is found
+        }
+      } catch (error) {
+        console.error('Error checking user role:', error);
+        window.location.href = 'index.html'; // Redirect to home on error
+      }
+    } else {
+      document.body.style.visibility = 'visible'; // Show content if not authenticated
+    }
+  });
 
   if (signupForm) {
     signupForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = signupForm['signup-email'].value;
       const password = signupForm['signup-password'].value;
-  
+
       try {
         const cred = await auth.createUserWithEmailAndPassword(email, password);
-        console.log('User created:', cred.user.uid);
-  
-        // Assign role based on email
         const role = email === 'muhammadnadeem34949@gmail.com' ? 'admin' : 'user';
-  
-        await db.collection('users').doc(cred.user.uid).set({
-          email: email,
-          role: role
-        });
-        console.log('User document created with role:', role);
+        await db.collection('users').doc(cred.user.uid).set({ email, role });
         signupForm.reset();
         alert('Signup successful. Please log in.');
       } catch (err) {
@@ -44,7 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-  
+
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -53,13 +68,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         const cred = await auth.signInWithEmailAndPassword(email, password);
-        console.log('User signed in:', cred.user.uid);
-
         const userDoc = await db.collection('users').doc(cred.user.uid).get();
         if (userDoc.exists) {
           const role = userDoc.data().role;
-          console.log('User role:', role);
-
           if (role === 'admin') {
             window.location.href = 'admin.html';
           } else {
@@ -75,6 +86,4 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
-
-
 });
