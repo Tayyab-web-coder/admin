@@ -1,126 +1,124 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js';
-import { getFirestore, collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-storage.js';
-import { getAuth, signOut } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, getDocs, collection, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/9.20.0/firebase-storage.js';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBTahYHkNIvOlv2PwAAd1o4Q-e8xACFhcI",
-  authDomain: "panel-481bd.firebaseapp.com",
-  projectId: "panel-481bd",
-  storageBucket: "panel-481bd.appspot.com",
-  messagingSenderId: "529328619298",
-  appId: "1:529328619298:web:248714d17f4d19b489af7b"
-};
+    apiKey: "AIzaSyBTahYHkNIvOlv2PwAAd1o4Q-e8xACFhcI",
+    authDomain: "panel-481bd.firebaseapp.com",
+    projectId: "panel-481bd",
+    storageBucket: "panel-481bd.appspot.com",
+    messagingSenderId: "529328619298",
+    appId: "1:529328619298:web:248714d17f4d19b489af7b"
+  };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
-const auth = getAuth(app);
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.body.style.visibility = 'visible'; // Show content when loaded
-
   const uploadForm = document.getElementById('upload-form');
-  if (uploadForm) {
-    uploadForm.addEventListener('submit', async (event) => {
-      event.preventDefault();
-      const fileInput = document.getElementById('file');
-      const descriptionInput = document.getElementById('file-description');
-      const file = fileInput.files[0];
-      const description = descriptionInput.value;
-
-      if (file) {
-        try {
-          const fileId = await uploadFile(file, { description }, db, storage);
-          console.log('File uploaded with ID:', fileId);
-          fileInput.value = '';
-          descriptionInput.value = '';
-          displayFiles();
-        } catch (error) {
-          console.error('Upload failed:', error);
-        }
-      }
-    });
-  }
-
-  displayFiles();
-});
-
-const uploadFile = async (file, metadata, db, storage) => {
-  const storageRef = ref(storage, 'files/' + file.name);
-  const uploadTask = uploadBytesResumable(storageRef, file);
-  await uploadTask;
-  const url = await getDownloadURL(storageRef);
-  const fileRef = doc(collection(db, 'files'));
-  await setDoc(fileRef, { url, ...metadata });
-  return fileRef.id;
-};
-
-const displayFiles = async () => {
   const fileList = document.getElementById('file-list');
-  fileList.innerHTML = '';
+  const progressBar = document.getElementById('progress-bar');
+  const progressText = document.getElementById('progress-text');
+  const logoutButton = document.getElementById('logout-button'); // Correctly reference the logout button
 
-  try {
+  // Check if the user is an admin
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (!userDoc.exists() || userDoc.data().role !== 'admin') {
+        alert('You do not have permission to access this page.');
+        window.location.href = 'index.html';
+      }
+    } else {
+      alert('You need to log in to access this page.');
+      window.location.href = 'index.html';
+    }
+  });
+
+  // Handle file upload
+  uploadForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const file = document.getElementById('file').files[0];
+    const description = document.getElementById('file-description').value;
+
+    if (file) {
+      const storageRef = ref(storage, 'files/' + file.name);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadTask.on('state_changed', 
+        (snapshot) => {
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          progressText.innerHTML = progress.toFixed(0) + '%';
+          progressBar.children[0].style.width = progress.toFixed(0) + '%';
+        }, 
+        (error) => {
+          console.error('Upload failed:', error);
+          alert('Upload failed: ' + error.message);
+        }, 
+        () => {
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            const fileData = {
+              name: file.name,
+              description,
+              url: downloadURL,
+              createdAt: new Date()
+            };
+            setDoc(doc(db, 'files', file.name), fileData).then(() => {
+              alert('File uploaded successfully.');
+              loadFiles();
+            }).catch((error) => {
+              console.error('Error storing file data:', error);
+              alert('Error storing file data: ' + error.message);
+            });
+          });
+        }
+      );
+    } else {
+      alert('Please select a file to upload.');
+    }
+  });
+
+  // Load and display files
+  const loadFiles = async () => {
+    fileList.innerHTML = '';
     const querySnapshot = await getDocs(collection(db, 'files'));
     querySnapshot.forEach((doc) => {
-      const data = doc.data();
-      console.log(data);
-      const listItem = document.createElement('li');
-      listItem.innerHTML = `
-        <video src="${data.url}" controls></video>
-        <span>${data.description}</span>
-        <button onclick="updateMetadata('${doc.id}')">Update</button>
-        <button onclick="removeFile('${doc.id}', '${data.url}')">Delete</button>
-      `;
-      fileList.appendChild(listItem);
+      const file = doc.data();
+      const li = document.createElement('li');
+      li.innerHTML = `<a href="${file.url}" target="_blank">${file.name}</a> - ${file.description} <button onclick="deleteFile('${file.name}')">Delete</button>`;
+      fileList.appendChild(li);
     });
-  } catch (error) {
-    console.error('Failed to fetch files:', error);
-  }
-};
+  };
 
-window.updateMetadata = async (fileId) => {
-  const newDescription = prompt('Enter new description:');
-  if (newDescription) {
-    try {
-      await updateFileMetadata(fileId, { description: newDescription }, db);
-      console.log('Metadata updated');
-      displayFiles();
-    } catch (error) {
-      console.error('Update failed:', error);
+  loadFiles();
+
+  // Handle file deletion
+  window.deleteFile = async (fileName) => {
+    if (confirm('Are you sure you want to delete this file?')) {
+      try {
+        const fileRef = ref(storage, 'files/' + fileName);
+        await deleteObject(fileRef);
+        await deleteDoc(doc(db, 'files', fileName));
+        alert('File deleted successfully.');
+        loadFiles();
+      } catch (error) {
+        console.error('Error deleting file:', error);
+        alert('Error deleting file: ' + error.message);
+      }
     }
-  }
-};
+  };
 
-window.removeFile = async (fileId, fileUrl) => {
-  if (confirm('Are you sure you want to delete this file?')) {
-    try {
-      await deleteFile(fileId, fileUrl, db, storage);
-      console.log('File deleted');
-      displayFiles();
-    } catch (error) {
-      console.error('Deletion failed:', error);
-    }
-  }
-};
-
-const updateFileMetadata = async (fileId, metadata, db) => {
-  const fileRef = doc(db, 'files', fileId);
-  await updateDoc(fileRef, metadata);
-};
-
-const deleteFile = async (fileId, fileUrl, db, storage) => {
-  const fileRef = doc(db, 'files', fileId);
-  await deleteDoc(fileRef);
-  const storageRef = ref(storage, fileUrl);
-  await deleteObject(storageRef);
-};
-
-window.logout = () => {
-  signOut(auth).then(() => {
-    window.location.href = 'index.html';
-  }).catch((error) => {
-    console.error('Sign out error:', error);
+  // Handle logout
+  logoutButton.addEventListener('click', () => {
+    signOut(auth).then(() => {
+      alert('Logged out successfully.');
+      window.location.href = 'index.html';
+    }).catch((error) => {
+      console.error('Error logging out:', error);
+      alert('Error logging out: ' + error.message);
+    });
   });
-};
+});

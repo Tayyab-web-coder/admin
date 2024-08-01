@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-
   const firebaseConfig = {
     apiKey: "AIzaSyBTahYHkNIvOlv2PwAAd1o4Q-e8xACFhcI",
     authDomain: "panel-481bd.firebaseapp.com",
@@ -8,15 +7,18 @@ document.addEventListener('DOMContentLoaded', () => {
     messagingSenderId: "529328619298",
     appId: "1:529328619298:web:248714d17f4d19b489af7b"
   };
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
+  
+  // Initialize Firebase only if it hasn't been initialized yet
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+
   const auth = firebase.auth();
   const db = firebase.firestore();
 
   const signupForm = document.getElementById('signup-form');
   const loginForm = document.getElementById('login-form');
 
-  // Check if the user is already logged in
   auth.onAuthStateChanged(async (user) => {
     if (user) {
       try {
@@ -44,20 +46,22 @@ document.addEventListener('DOMContentLoaded', () => {
   if (signupForm) {
     signupForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = signupForm['signup-email'].value;
-      const password = signupForm['signup-password'].value;
-
+      const email = document.getElementById('signup-email').value;
+      const password = document.getElementById('signup-password').value;
       try {
-        const cred = await auth.createUserWithEmailAndPassword(email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        console.log('Signup successful:', userCredential.user.uid);
         const role = email === 'muhammadnadeem34949@gmail.com' ? 'admin' : 'user';
-        await db.collection('users').doc(cred.user.uid).set({ email, role });
-        signupForm.reset();
+        await setDoc(doc(db, 'users', userCredential.user.uid), { role });
+        document.getElementById('signup-email').value = '';
+        document.getElementById('signup-password').value = '';
         alert('Signup successful. Please log in.');
-      } catch (err) {
-        console.error('Error during signup:', err);
-        alert('Error during signup: ' + err.message);
+      } catch (error) {
+        console.error('Signup error:', error);
+        alert('Error during signup: ' + error.message);
       }
     });
+    
   }
 
   if (loginForm) {
