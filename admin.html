@@ -21,7 +21,7 @@
 </head>
 <body>
   <h1>Welcome, Admin!</h1>
-  <button id="logout-button">Log Out</button> <!-- Updated button with the correct ID -->
+  <button onclick="logout()">Log Out</button>
 
   <h1>Upload and Manage Files</h1>
   <form id="upload-form">
@@ -38,5 +38,6 @@
 
   <h2>File List</h2>
   <ul id="file-list"></ul>
+  <script type="module" src="storage.js"></script>
 </body>
 </html>

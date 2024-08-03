@@ -1,90 +1,44 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-app.js';
-import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-auth.js';
-import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/9.1.0/firebase-firestore.js';
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBTahYHkNIvOlv2PwAAd1o4Q-e8xACFhcI",
-  authDomain: "panel-481bd.firebaseapp.com",
-  projectId: "panel-481bd",
-  storageBucket: "panel-481bd.appspot.com",
-  messagingSenderId: "529328619298",
-  appId: "1:529328619298:web:248714d17f4d19b489af7b"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+import { auth } from './firebaseConfig.js';
+import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-  const signupForm = document.getElementById('signup-form');
-  const loginForm = document.getElementById('login-form');
+  // Create and style the loading indicator
+  const loadingIndicator = document.createElement('div');
+  loadingIndicator.id = 'loading';
+  loadingIndicator.style.position = 'fixed';
+  loadingIndicator.style.top = '0';
+  loadingIndicator.style.left = '0';
+  loadingIndicator.style.width = '100%';
+  loadingIndicator.style.height = '100%';
+  loadingIndicator.style.backgroundColor = 'white';
+  loadingIndicator.style.color = 'black';
+  loadingIndicator.style.display = 'flex';
+  loadingIndicator.style.justifyContent = 'center';
+  loadingIndicator.style.alignItems = 'center';
+  loadingIndicator.style.zIndex = '9999';
+  loadingIndicator.innerText = 'Loading...';
+  document.body.appendChild(loadingIndicator);
 
-  onAuthStateChanged(auth, async (user) => {
+  // Hide page content initially
+  document.body.style.visibility = 'hidden';
+
+  onAuthStateChanged(auth, (user) => {
     if (user) {
-      try {
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        if (userDoc.exists()) {
-          const role = userDoc.data().role;
-          const redirectUrl = role === 'admin' ? 'admin.html' : 'user.html';
-          if (window.location.pathname !== `/${redirectUrl}`) {
-            window.location.href = redirectUrl;
-          }
-        } else {
-          console.error('No user document found');
-          if (window.location.pathname !== '/index.html') {
-            window.location.href = 'index.html';
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching user role:', error);
-        if (window.location.pathname !== '/index.html') {
-          window.location.href = 'index.html';
-        }
+      const role = user.email === 'muhammadnadeem34949@gmail.com' ? 'admin' : 'user';
+      const redirectUrl = role === 'admin' ? 'admin.html' : 'user.html';
+      
+      // Redirect only if not already on the correct page
+      if (window.location.pathname.split('/').pop() !== redirectUrl) {
+        window.location.replace(redirectUrl);
+      } else {
+        // Show content if already on the correct page
+        document.body.style.visibility = 'visible';
+        loadingIndicator.style.display = 'none';
       }
     } else {
+      // User is not authenticated, show content
       document.body.style.visibility = 'visible';
-    }
-  });
-
-  signupForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('signup-email').value;
-    const password = document.getElementById('signup-password').value;
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const role = email === 'muhammadnadeem34949@gmail.com' ? 'admin' : 'user';
-      await setDoc(doc(db, 'users', userCredential.user.uid), { role, email });
-      document.getElementById('signup-email').value = '';
-      document.getElementById('signup-password').value = '';
-      alert('Signup successful. Please log in.');
-    } catch (error) {
-      console.error('Signup error:', error);
-      alert('Error during signup: ' + error.message);
-    }
-  });
-
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
-      if (userDoc.exists()) {
-        const role = userDoc.data().role;
-        const redirectUrl = role === 'admin' ? 'admin.html' : 'user.html';
-        if (window.location.pathname !== `/${redirectUrl}`) {
-          window.location.href = redirectUrl;
-        }
-      } else {
-        console.error('No user document found');
-        alert('No user document found');
-      }
-      document.getElementById('login-email').value = '';
-      document.getElementById('login-password').value = '';
-    } catch (error) {
-      console.error('Login error:', error);
-      alert('Error during login: ' + error.message);
+      loadingIndicator.style.display = 'none';
     }
   });
 });

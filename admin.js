@@ -1,7 +1,7 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.20.0/firebase-app.js';
-import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js';
-import { getFirestore, doc, getDoc, setDoc, getDocs, collection, deleteDoc } from 'https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/9.20.0/firebase-storage.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+import { getAuth, signOut } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+import { getFirestore, collection, getDocs, doc, setDoc, updateDoc, deleteDoc, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-storage.js';
 
 const firebaseConfig = {
     apiKey: "AIzaSyBTahYHkNIvOlv2PwAAd1o4Q-e8xACFhcI",
@@ -10,115 +10,119 @@ const firebaseConfig = {
     storageBucket: "panel-481bd.appspot.com",
     messagingSenderId: "529328619298",
     appId: "1:529328619298:web:248714d17f4d19b489af7b"
-  };
+};
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-document.addEventListener('DOMContentLoaded', () => {
-  const uploadForm = document.getElementById('upload-form');
-  const fileList = document.getElementById('file-list');
-  const progressBar = document.getElementById('progress-bar');
-  const progressText = document.getElementById('progress-text');
-  const logoutButton = document.getElementById('logout-button'); // Correctly reference the logout button
-
-  // Check if the user is an admin
-  onAuthStateChanged(auth, async (user) => {
-    if (user) {
-      const userDoc = await getDoc(doc(db, 'users', user.uid));
-      if (!userDoc.exists() || userDoc.data().role !== 'admin') {
-        alert('You do not have permission to access this page.');
-        window.location.href = 'index.html';
-      }
-    } else {
-      alert('You need to log in to access this page.');
-      window.location.href = 'index.html';
-    }
-  });
-
-  // Handle file upload
-  uploadForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const file = document.getElementById('file').files[0];
-    const description = document.getElementById('file-description').value;
-
-    if (file) {
-      const storageRef = ref(storage, 'files/' + file.name);
-      const uploadTask = uploadBytesResumable(storageRef, file);
-
-      uploadTask.on('state_changed', 
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          progressText.innerHTML = progress.toFixed(0) + '%';
-          progressBar.children[0].style.width = progress.toFixed(0) + '%';
-        }, 
-        (error) => {
-          console.error('Upload failed:', error);
-          alert('Upload failed: ' + error.message);
-        }, 
-        () => {
-          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            const fileData = {
-              name: file.name,
-              description,
-              url: downloadURL,
-              createdAt: new Date()
-            };
-            setDoc(doc(db, 'files', file.name), fileData).then(() => {
-              alert('File uploaded successfully.');
-              loadFiles();
-            }).catch((error) => {
-              console.error('Error storing file data:', error);
-              alert('Error storing file data: ' + error.message);
-            });
-          });
-        }
-      );
-    } else {
-      alert('Please select a file to upload.');
-    }
-  });
-
-  // Load and display files
-  const loadFiles = async () => {
-    fileList.innerHTML = '';
-    const querySnapshot = await getDocs(collection(db, 'files'));
-    querySnapshot.forEach((doc) => {
-      const file = doc.data();
-      const li = document.createElement('li');
-      li.innerHTML = `<a href="${file.url}" target="_blank">${file.name}</a> - ${file.description} <button onclick="deleteFile('${file.name}')">Delete</button>`;
-      fileList.appendChild(li);
-    });
-  };
-
-  loadFiles();
-
-  // Handle file deletion
-  window.deleteFile = async (fileName) => {
-    if (confirm('Are you sure you want to delete this file?')) {
-      try {
-        const fileRef = ref(storage, 'files/' + fileName);
+window.removeFile = async (fileId, fileName) => {
+    try {
+        await deleteDoc(doc(db, 'files', fileId));
+        const fileRef = ref(storage, `files/${fileName}`);
         await deleteObject(fileRef);
-        await deleteDoc(doc(db, 'files', fileName));
-        alert('File deleted successfully.');
-        loadFiles();
-      } catch (error) {
-        console.error('Error deleting file:', error);
-        alert('Error deleting file: ' + error.message);
-      }
+        displayFiles();
+    } catch (error) {
+        console.error('Error removing file:', error);
+        alert('Error removing file. Please check the console for details.');
     }
-  };
+};
 
-  // Handle logout
-  logoutButton.addEventListener('click', () => {
-    signOut(auth).then(() => {
-      alert('Logged out successfully.');
-      window.location.href = 'index.html';
-    }).catch((error) => {
-      console.error('Error logging out:', error);
-      alert('Error logging out: ' + error.message);
+const displayFiles = async () => {
+    const fileList = document.getElementById('file-list');
+    fileList.innerHTML = '';
+    try {
+        const querySnapshot = await getDocs(collection(db, 'files'));
+        querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `
+                <video src="${data.url}" controls>${data.name}</video>
+                <span>${data.description}</span>
+                <button onclick="updateMetadata('${doc.id}')">Update</button>
+                <button onclick="removeFile('${doc.id}', '${data.name}')">Delete</button>
+            `;
+            fileList.appendChild(listItem);
+        });
+    } catch (error) {
+        console.error('Error fetching files:', error);
+    }
+};
+
+window.updateMetadata = async (fileId) => {
+    const newDescription = prompt('Enter new description:');
+    if (newDescription) {
+        try {
+            await updateDoc(doc(db, 'files', fileId), { description: newDescription });
+            displayFiles();
+        } catch (error) {
+            console.error('Error updating metadata:', error);
+            alert('Error updating metadata. Please check the console for details.');
+        }
+    }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const uploadForm = document.getElementById('upload-form');
+    uploadForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const fileInput = document.getElementById('file');
+        const descriptionInput = document.getElementById('file-description');
+        const file = fileInput.files[0];
+        const description = descriptionInput.value;
+
+        if (file) {
+            try {
+                const fileRef = ref(storage, `files/${file.name}`);
+                const uploadTask = uploadBytesResumable(fileRef, file);
+
+                uploadTask.on('state_changed',
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        document.getElementById('progress-bar').children[0].style.width = progress + '%';
+                        document.getElementById('progress-text').textContent = Math.round(progress) + '%';
+                    },
+                    (error) => {
+                        console.error('Upload failed:', error.message);
+                        alert('Upload failed. Please check the console for details.');
+                    },
+                    async () => {
+                        try {
+                            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                            await setDoc(doc(db, 'files', file.name), {
+                                name: file.name,
+                                url: downloadURL,
+                                description: description,
+                            });
+                            fileInput.value = '';
+                            descriptionInput.value = '';
+                            document.getElementById('progress-bar').children[0].style.width = '0%';
+                            document.getElementById('progress-text').textContent = '0%';
+                            displayFiles();
+                        } catch (error) {
+                            console.error('Error setting document:', error.message);
+                            alert('Error setting document. Please check the console for details.');
+                        }
+                    }
+                );
+            } catch (error) {
+                console.error('Upload failed:', error.message);
+                alert('Upload failed. Please check the console for details.');
+            }
+        }
     });
-  });
+
+    displayFiles();
 });
+
+window.logout = async () => {
+    try {
+        await signOut(auth);
+        window.location.href = 'login.html'; 
+    } catch (error) {
+        console.error('Logout error:', error);
+        alert('Error logging out. Please check the console for details.');
+    }
+};

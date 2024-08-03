@@ -44,7 +44,7 @@
 
       const logout = () => {
         signOut(auth).then(() => {
-          window.location.replace('index.html');
+          window.location.replace('login.html');
         }).catch((error) => {
           console.error('Sign out error:', error);
         });
