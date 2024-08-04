@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const password = document.getElementById('register-password').value;
 
     try {
+      // Create a new user with email and password
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const userId = userCredential.user.uid;
       const role = email === 'muhammadnadeem34949@gmail.com' ? 'admin' : 'user';
