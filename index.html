@@ -4,15 +4,159 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Home Page</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 </head>
 <body>
-   <nav>
-    <button><a href="register.html">Register</a></button>
-    <button><a href="login.html">Login</a></button>
-  </nav>
+  <header>
+    <nav>
+      <div class="logo">
+        <h1>Etech.</h1>
+      </div>
+      <ul>
+        <li><a href="#">Home</a></li>
+        <li><a href="#">Courses</a></li>
+        <li><a href="#">Testimonial</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+      <div class="buttons">
+        <button><a href="./login.html" title="Login">Login</a></button>
+        <button><a href="./register.html" title="Register">Register</a></button>
+      </div>
+    </nav>
+  </header>
 
+  <section class="hero">
+    <div class="hero-content">
+      <div class="text-section">
+        <h1>Develop your skills in a new and unique way</h1>
+        <p>Develop your skills in a new and unique way by exploring innovative methods and staying curious. Unlock your potential through continuous learning and creative problem-solving.</p>
+        <button><a href="./register.html" title="Start Learning">Enroll Now</a></button>
+      </div>
+      <div class="img-section">
+        <div class="back-overlay"></div>
+        <div class="circle-container"></div>
+        <img src="./image/file.png" alt="Hero_img">
+        <div class="hero-courses">
+          <div class="icon">
+            <i class="fa-solid fa-arrow-up"></i>
+          </div>
+          <h4><span>50+</span><br>Online Courses</h4>
+        </div>
+        <div class="hero-join">
+          <img src="./image/istockphoto-1500816448-170667a.png" alt="">
+          <div class="hero-join-content">
+            <h3>UI Design Class</h3>
+            <h5>Start with Experts</h5>
+            <button>Join now</button>
+          </div>
+        </div>
+        <div class="hero-students">
+          <h3><span>10k+</span><br>Online Students</h3>
+          <div class="hero-students-img">
+            <img src="./image/istockphoto-1500816448-170667a.png" alt="">
+            <img src="./image/istockphoto-1500816448-170667a.png" alt="">
+            <img src="./image/istockphoto-1500816448-170667a.png" alt="">
+            <img src="./image/istockphoto-1500816448-170667a.png" alt="">
+            <img src="./image/istockphoto-1500816448-170667a.png" alt="">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-banner">
+      <h4 class="icon-with-text">
+        <span>Duolingo</span>
+      </h4>
+      <h4 class="icon-with-text">
+        <i class="fa-brands fa-discord"></i>
+        <span>Magic Leap</span>
+      </h4>
+      <h4 class="icon-with-text">
+        <i class="fa-brands fa-microsoft"></i>
+        <span>Microsoft</span>
+      </h4>
+      <h4 class="icon-with-text">
+        <i class="fa-solid fa-umbrella"></i>
+        <span>Codecav</span>
+      </h4>
+      <h4 class="icon-with-text">
+        <i class="fa-solid fa-message"></i>
+        <span>User</span>
+        <b>Testing</b>
+      </h4>
+    </div>
+  </section>
+
+  <section class="courses">
+    <div class="search-courses">
+      <h1>Search Courses</h1>
+      <div class="course-search-bar">
+        <input type="text" placeholder="Search for over 50+ courses">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <button class="btn">Search</button>
+      </div>
+    </div>
+
+    <div class="course-benefits">
+      <div class="course-benefits-left">
+        <div class="left-images">
+          <img class="image1" src="./image/file.png" alt="">
+          <img class="image2" src="./image/file (1).png" alt="">
+          <img class="image3" src="./image/istockphoto-1500816448-170667a.png" alt="">
+          <img class="image4" src="./image/AdobeStock_573217986_Preview_prev_ui.png" alt="">
+        </div>
+      </div>
+
+      <div class="course-benefits-right">
+        <div class="course-benefits-right-header">
+          <h3><span>Benefits </span>From Our Online <br>Learning</h3>
+        </div>
+        <div class="course-benefits-right-content">
+          <div>
+            <i class="fa-solid fa-play"></i>
+          </div>
+          <div>
+            <h3>Online Degree</h3>
+            <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Dolore corporis reiciendis vero facere id tenetur voluptate non!</p>
+          </div>
+        </div>
+        <div class="course-benefits-right-content">
+          <div>
+            <i class="fa-solid fa-play"></i>
+          </div>          
+          <div>
+            <h3>Short Courses</h3>
+            <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Quod saepe dignissimos magni hic est? Accusamus consequatur distinctio nisi quibusdam?</p>
+          </div>
+        </div>
+        <div class="course-benefits-right-content">
+          <div>
+            <i class="fa-solid fa-play"></i>
+          </div>          
+          <div>
+            <h3>Short Courses</h3>
+            <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Quod saepe dignissimos magni hic est? Accusamus consequatur distinctio nisi quibusdam?</p>
+          </div>
+        </div>
+        <div class="course-benefits-right-content">
+          <div>
+            <i class="fa-solid fa-play"></i>
+          </div>          
+          <div>
+            <h3>Short Courses</h3>
+            <p>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Quod saepe dignissimos magni hic est? Accusamus consequatur distinctio nisi quibusdam?</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
   
+  <h1>Available Courses</h1>
+  <ul id="course-list"></ul>
+
+
   <div id="loading" style="display:none;">Loading...</div>
+
   <script type="module" src="home.js"></script>
 </body>
 </html>
