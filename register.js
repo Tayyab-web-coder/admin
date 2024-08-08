@@ -1,5 +1,5 @@
 import { auth, db } from './firebaseConfig.js';
-import { createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js';
+import { createUserWithEmailAndPassword,onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js';
 import { doc, setDoc } from 'https://www.gstatic.com/firebasejs/9.20.0/firebase-firestore.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -27,4 +27,20 @@ document.addEventListener('DOMContentLoaded', () => {
       alert('Error during signup: ' + error.message);
     }
   });
+});
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    // Check if there's a pending course ID in sessionStorage
+    const pendingCourseId = sessionStorage.getItem('pendingCourseId');
+    if (pendingCourseId) {
+      // Redirect to the course page
+      window.location.href = `courseplay.html?id=${pendingCourseId}`;
+      // Clear the stored course ID
+      sessionStorage.removeItem('pendingCourseId');
+    } else {
+      // No pending course, redirect to the user page
+      window.location.href = 'user.html';
+    }
+  }
 });

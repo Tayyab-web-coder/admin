@@ -1,50 +1,6 @@
-import { auth } from './firebaseConfig.js';
-import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.20.0/firebase-auth.js';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
 import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
-
-
-document.addEventListener('DOMContentLoaded', () => {
-  // Create and style the loading indicator
-  const loadingIndicator = document.createElement('div');
-  loadingIndicator.id = 'loading';
-  loadingIndicator.style.position = 'fixed';
-  loadingIndicator.style.top = '0';
-  loadingIndicator.style.left = '0';
-  loadingIndicator.style.width = '100%';
-  loadingIndicator.style.height = '100%';
-  loadingIndicator.style.backgroundColor = 'white';
-  loadingIndicator.style.color = 'black';
-  loadingIndicator.style.display = 'flex';
-  loadingIndicator.style.justifyContent = 'center';
-  loadingIndicator.style.alignItems = 'center';
-  loadingIndicator.style.zIndex = '9999';
-  loadingIndicator.innerText = 'Loading...';
-  document.body.appendChild(loadingIndicator);
-
-  // Hide page content initially
-  document.body.style.visibility = 'hidden';
-
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      const role = user.email === 'muhammadnadeem34949@gmail.com' ? 'admin' : 'user';
-      const redirectUrl = role === 'admin' ? 'admin.html' : 'user.html';
-      
-      // Redirect only if not already on the correct page
-      if (window.location.pathname.split('/').pop() !== redirectUrl) {
-        window.location.replace(redirectUrl);
-      } else {
-        // Show content if already on the correct page
-        document.body.style.visibility = 'visible';
-        loadingIndicator.style.display = 'none';
-      }
-    } else {
-      // User is not authenticated, show content
-      document.body.style.visibility = 'visible';
-      loadingIndicator.style.display = 'none';
-    }
-  });
-});
 
 const firebaseConfig = {
   apiKey: "AIzaSyBTahYHkNIvOlv2PwAAd1o4Q-e8xACFhcI",
@@ -56,31 +12,43 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 const db = getFirestore(app);
 
-const displayCourses = async () => {
-    const courseList = document.getElementById('course-list');
-    courseList.innerHTML = '';
-    try {
-        const querySnapshot = await getDocs(collection(db, 'courses'));
-        querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            const listItem = document.createElement('li');
-            listItem.classList.add('course-item');
-            listItem.onclick = () => {
-                window.location.href = `course-detail.html?id=${doc.id}`;
-            };
-            listItem.innerHTML = `
-                <img src="${data.imgUrl}" alt="${data.name}">
-                <span>${data.name}</span>
-            `;
-            courseList.appendChild(listItem);
-        });
-    } catch (error) {
-        console.error('Error fetching courses:', error);
-    }
-};
+document.addEventListener('DOMContentLoaded', async () => {
+  const courseList = document.getElementById('course-list');
 
-document.addEventListener('DOMContentLoaded', () => {
-    displayCourses();
+  // Load and display courses
+  try {
+    const querySnapshot = await getDocs(collection(db, 'courses'));
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      const listItem = document.createElement('li');
+      listItem.classList.add('course-item');
+      listItem.innerHTML = `
+        <img src="${data.image}" alt="${data.name}" onerror="this.onerror=null; this.src='default-image.jpg';">
+        <span>${data.name}</span>
+      `;
+      courseList.appendChild(listItem);
+
+      listItem.addEventListener('click', () => {
+        window.location.href = `course-detail.html?id=${doc.id}`;
+      });
+    });
+  } catch (error) {
+    console.error('Error fetching courses:', error);
+  }
+
+  // Auth State Check and Redirection Logic
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      console.log('User is logged in:', user.email);
+      // Redirect authenticated users to the user page
+      window.location.href = 'user.html';
+    } else {
+      console.log('No user is logged in.');
+      // Allow unauthenticated users to stay on the home page
+      // You can also add a timeout to show a message or automatically redirect to the login page
+    }
+  });
 });

@@ -1,57 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Panel</title>
-  <script type="module" src="admin.js"></script>
+  <script type="module" src="admin.js" defer></script>
   <style>
+    /* Add your custom styles here */
+    #course-list {
+      list-style-type: none;
+      padding: 0;
+    }
+
+    #course-list li {
+      margin-bottom: 20px;
+    }
+
     #progress-bar {
       width: 100%;
-      background-color: red;
+      background-color: grey;
     }
+
     #progress-bar div {
-      height: 20px;
       width: 0;
-      background-color: #4caf50;
-      text-align: center;
-      color: white;
+      background-color: green;
+      height: 20px;
+    }
+
+    /* Hide the preview by default */
+    #course-img-preview {
+      max-width: 200px;
+      display: none;
     }
   </style>
 </head>
+
 <body>
-  <h1>Welcome, Admin!</h1>
-  <button onclick="logout()">Log Out</button>
-
-  <h1>Upload and Manage Courses</h1>
+  <h1>Admin Panel</h1>
   <form id="course-form">
-    <label for="course-name">Course Name:</label>
-    <input type="text" id="course-name" name="course-name" required>
-    <label for="course-img">Course Image:</label>
-    <input type="file" id="course-img" name="course-img" required>
-    <label for="course-description">Description:</label>
-    <textarea id="course-description" name="course-description" required></textarea>
-
-    <h3>Videos</h3>
+    <input type="text" id="course-name" placeholder="Course Name" required>
+    <textarea id="course-description" placeholder="Course Description" required></textarea>
+    <input type="file" id="course-img" accept="image/*" required>
+    <img id="course-img-preview" style="max-width: 200px; display: none;">
     <div id="video-fields">
       <div class="video-field">
-        <label for="video-name-0">Video Name:</label>
-        <input type="text" id="video-name-0" name="video-name" required>
         <label for="video-file-0">Video File:</label>
-        <input type="file" id="video-file-0" class="video-file" name="video-file" required>
+        <input type="file" id="video-file-0" class="video-file" accept="video/*" required>
         <label for="video-thumb-0">Video Thumbnail:</label>
-        <input type="file" id="video-thumb-0" class="video-thumb" name="video-thumb">
+        <input type="file" id="video-thumb-0" class="video-thumb" accept="image/*">
+        <input type="text" id="video-name-0" class="video-name" placeholder="Video Name" required>
       </div>
     </div>
-    <button type="button" id="add-video">Add Another Video</button>
-    <button type="submit">Add Course</button>
+    <button type="button" id="add-video">Add Video</button>
+    <button type="submit">Submit</button>
   </form>
-
-  <div id="progress-bar">
-    <div id="progress-text">0%</div>
-  </div>
-
-  <h2>Courses</h2>
-  <ul id="course-list"></ul>
+  <div id="course-list"></div>
+  <button id="logout-button">Logout</button>
 </body>
+
 </html>
